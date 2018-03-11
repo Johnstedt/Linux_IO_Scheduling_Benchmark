@@ -13,7 +13,7 @@
 #include <sys/time.h>
 #include <string.h>
 
-#define NUM_OF_THREADS 18
+#define NUM_OF_THREADS 90
 
 typedef struct keepTime
 {
@@ -31,27 +31,6 @@ char *benchData[NUM_OF_THREADS];
 char readWrite[2] = {'r', 'w'};
 char *op;
 
-// 3 MUST | LENGTH
-char *tests[] = {
-    "1garbage.txt",
-    "2garbage.txt",
-    "3garbage.txt",
-    "4garbage.txt",
-    "5garbage.txt",
-    "6garbage.txt",
-    "7garbage.txt",
-    "8garbage.txt",
-    "9garbage.txt",
-    "10garbage.txt",
-    "11garbage.txt",
-    "12garbage.txt",
-    "13garbage.txt",
-    "14garbage.txt",
-    "15garbage.txt",
-    "16garbage.txt",
-    "17garbage.txt",
-    "18garbage.txt",
-};
 
 double getWallTime()
 {
@@ -142,11 +121,12 @@ int main(int argc, char *argv[])
     //PRINT RESULTS
     for (int i = 0; i < NUM_OF_THREADS; i++)
     {
-        printf("%d %d %.1s %e %e\n",
+        printf("%d %d %.1s %e %e %e\n",
                intLen[i],
                i,
                operations[i],
                keep[i].timeRun - keep[i].timeStart,
+               keep[i].timeFinish - keep[i].timeRun,
                keep[i].timeFinish - keep[i].timeStart);
     }
 
@@ -168,14 +148,14 @@ void *pthEmpty(void *self)
 
     FILE *fp;
 
-    char value;
+    char value[2];
 
-    sprintf(&value, "%d", myself);
+    sprintf(value, "%d", myself);
 
-    char* fileName = malloc(12 + strlen(&value));
+    char* fileName = malloc(12 + strlen(value));
 
     strcpy(fileName, "garbage");
-    strcat(fileName, &value);
+    strcat(fileName, value);
 
     fp = fopen(fileName, op);
     if (*op == 'r')
