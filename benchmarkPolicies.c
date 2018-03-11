@@ -11,14 +11,15 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <string.h>
 
-#define NUM_OF_THREADS 16
+#define NUM_OF_THREADS 18
 
 typedef struct keepTime
 {
     double timeStart;
     double timeRun;
-    double timeFinish
+    double timeFinish;
 } keepTime;
 
 struct keepTime keep[NUM_OF_THREADS];
@@ -27,7 +28,7 @@ void *pthEmpty(void *thread_data);
 int intLen[NUM_OF_THREADS];
 char *operations[NUM_OF_THREADS];
 char *benchData[NUM_OF_THREADS];
-char *readWrite[] = {'R', 'W'};
+char readWrite[2] = {'r', 'w'};
 char *op;
 
 // 3 MUST | LENGTH
@@ -50,23 +51,26 @@ char *tests[] = {
     "16garbage.txt",
     "17garbage.txt",
     "18garbage.txt",
-}
+};
 
-void getWallTime(currently)
+double getWallTime()
 {
     struct timeval t;
     gettimeofday(&t, NULL);
-    currently = t.tv_sec + t.tv_usec / 1000000.0;
+    printf("%e\n", (t.tv_usec / 1000000.0));
+    double currently = t.tv_sec + t.tv_usec / 1000000.0;
+    printf("then dubble %e\n", currently);
+    return currently;
 }
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-    int threadIdent;
-    pthread *threads;
+    long threadIdent;
+    pthread_t *threads;
     double start, stop;
-    int large = 1000000; // One million
-    int medium = 10000;  // 10K
-    int small = 100;     // Hundred
+    int large = 10000000; // 10 million
+    int medium = 100000;  // 100K
+    int small = 1000;     // K
     int ret = 0;
 
     threads = calloc(NUM_OF_THREADS, sizeof(threads));
@@ -95,11 +99,11 @@ main(int argc, char *argv[])
 
         if (i % 2 == 0) // EVEN READ
         {
-            op = readWrite[0];
+            op = &readWrite[0];
         }
         else // ODD WRITE
         {
-            op = readWrite[1];
+            op = &readWrite[1];
         }
 
         operations[i] = malloc(sizeof(char));
@@ -115,40 +119,40 @@ main(int argc, char *argv[])
     //INIT THREADS
     for (threadIdent = 0; threadIdent < NUM_OF_THREADS; threadIdent++)
     {
-        retVal = pthread_create(&threads[threadIdent], NULL, pthEmpty, &thread_num[threadIdent]);
-        getWallTime(keep[thread].timeStart);
-        if (retVal)
+        ret = pthread_create(&threads[threadIdent], NULL, pthEmpty, &thread_num[threadIdent]);
+        keep[threadIdent].timeStart = getWallTime();
+        if (ret)
         {
-            fprintf(stderr, "return value pthread_create: %d\n", retVal);
+            fprintf(stderr, "return value pthread_create: %d\n", ret);
             exit(1);
         }
     }
 
     //EXIT THREADS
-    for (threadIdent = 0; threadIdent < NUMBER_THREADS; threadIdent++)
+    for (threadIdent = 0; threadIdent < NUM_OF_THREADS; threadIdent++)
     {
-        retVal = pthread_join(threads[threadIdent], NULL);
-        if (retVal)
+        ret = pthread_join(threads[threadIdent], NULL);
+        if (ret)
         {
-            fprintf(stderr, "return value pthread_join: %d\n", retVal);
+            fprintf(stderr, "return value pthread_join: %d\n", ret);
             exit(1);
         }
     }
 
     //PRINT RESULTS
-    for (int i = 0; i < NUMBER_THREADS; i++)
+    for (int i = 0; i < NUM_OF_THREADS; i++)
     {
-        printf("%d %d %s %e %e\n",
+        printf("%d %d %.1s %e %e\n",
                intLen[i],
                i,
-               operation[i],
-               keep[i].timeFinish - keep[i].timeRun,
+               operations[i],
+               keep[i].timeRun - keep[i].timeStart,
                keep[i].timeFinish - keep[i].timeStart);
     }
 
     free(threads);
 
-    for (int i = 0; i < NUMBER_THREADS; i++)
+    for (int i = 0; i < NUM_OF_THREADS; i++)
     {
         free(benchData[i]);
     }
@@ -160,11 +164,21 @@ void *pthEmpty(void *self)
 {
     int myself = *(int *)self; // I cant handle pointers
 
-    getWallTime(keep[mySelf].timeRun);
+    keep[myself].timeRun = getWallTime();
 
     FILE *fp;
-    fp = fopen(tests[myself], op);
-    if (*op == 'R')
+
+    char value;
+
+    sprintf(&value, "%d", myself);
+
+    char* fileName = malloc(12 + strlen(&value));
+
+    strcpy(fileName, "garbage");
+    strcat(fileName, &value);
+
+    fp = fopen(fileName, op);
+    if (*op == 'r')
     {
         fgets(benchData[myself], intLen[myself], fp);
     }
@@ -174,5 +188,5 @@ void *pthEmpty(void *self)
     }
     fclose(fp);
 
-    getWallTime(keep[mySelf].timeFinish);
+    keep[myself].timeFinish = getWallTime();
 }
