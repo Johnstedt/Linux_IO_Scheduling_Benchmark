@@ -1,0 +1,6 @@
+$SCHEDLIST='noop cfq deadline'
+for sched in $SCHEDLIST; do
+	echo $sched | sudo tee /sys/block/sdd1/queue/scheduler
+	./bench
+done
+	
