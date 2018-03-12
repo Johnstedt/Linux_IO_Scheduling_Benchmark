@@ -4,6 +4,8 @@
  * 
  */
 
+#define _GNU_SOURCE
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -12,8 +14,10 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
-#define NUM_OF_THREADS 90
+#define NUM_OF_THREADS 18
 
 typedef struct keepTime
 {
@@ -144,20 +148,22 @@ void *pthEmpty(void *self)
 {
     int myself = *(int *)self; // I cant handle pointers
 
-    keep[myself].timeRun = getWallTime();
-
     FILE *fp;
 
     char value[2];
 
     sprintf(value, "%d", myself);
 
-    char* fileName = malloc(12 + strlen(value));
+    char* fileName = malloc(12 + strlen(value)+1);
 
     strcpy(fileName, "garbage");
     strcat(fileName, value);
 
-    fp = fopen(fileName, op);
+    int fd = open(fileName, O_DIRECT | O_CREAT | O_RDWR | O_LARGEFILE);    
+    fp = fdopen(fd, op);
+
+    keep[myself].timeRun = getWallTime();
+
     if (*op == 'r')
     {
         fgets(benchData[myself], intLen[myself], fp);
@@ -166,7 +172,13 @@ void *pthEmpty(void *self)
     {
         fputs(benchData[myself], fp);
     }
+
+    if(myself == 4){
+        sleep(1);
+    }
+
     fclose(fp);
+    close(fd);
 
     keep[myself].timeFinish = getWallTime();
 }
