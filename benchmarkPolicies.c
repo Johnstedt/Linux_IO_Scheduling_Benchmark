@@ -151,15 +151,14 @@ int main(int argc, char *argv[])
                keep[i].timeFinish - keep[i].timeStart);
 
     }
-    printf("TOTAL %e \n WRITE LARGE %e \n READ LARGE %e \n \
-            WRITE MED %e \n READ MED %e \n WRITE SMALL %e\n READ SMALL %e\n",
-               total.timeStart - total.timeStop,
-               total.timeLargeWriteAVG/NUM_OF_THREADS/6,
-               total.timeLargeReadAVG/NUM_OF_THREADS/6,
-               total.timeMediumWriteAVG/NUM_OF_THREADS/6,
-               total.timeMediumReadAVG/NUM_OF_THREADS/6,
-               total.timeSmallWriteAVG/NUM_OF_THREADS/6,
-               total.timeSmallReadAVG/NUM_OF_THREADS/6
+    printf("TOTAL %e \n WRITE LARGE %e \n READ LARGE %e \n WRITE MED %e \n READ MED %e \n WRITE SMALL %e\n READ SMALL %e\n",
+               total.timeStop - total.timeStart,
+               total.timeLargeWriteAVG/(NUM_OF_THREADS/6),
+               total.timeLargeReadAVG/(NUM_OF_THREADS/6),
+               total.timeMediumWriteAVG/(NUM_OF_THREADS/6),
+               total.timeMediumReadAVG/(NUM_OF_THREADS/6),
+               total.timeSmallWriteAVG/(NUM_OF_THREADS/6),
+               total.timeSmallReadAVG/(NUM_OF_THREADS/6)
                );
 
     free(threads);
@@ -187,8 +186,8 @@ void *pthEmpty(void *self)
     strcpy(fileName, "garbage");
     strcat(fileName, value);
 
-    int fd = open(fileName, O_DIRECT | O_CREAT | O_RDWR | O_LARGEFILE);    
-    fp = fdopen(fd, op);
+    //int fd = open(fileName, O_DIRECT | O_CREAT | O_RDWR | O_LARGEFILE);    
+    fp = fopen(fileName, op);
 
     keep[myself].timeRun = getWallTime();
 
@@ -202,7 +201,7 @@ void *pthEmpty(void *self)
     }
 
     fclose(fp);
-    close(fd);
+   // close(fd);
 
     keep[myself].timeFinish = getWallTime();
 
