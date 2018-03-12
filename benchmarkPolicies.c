@@ -26,7 +26,20 @@ typedef struct keepTime
     double timeFinish;
 } keepTime;
 
+typedef struct totalTime
+{
+    double timeStart;
+    double timeStop;
+    double timeSmallReadAVG;
+    double timeSmallWriteAVG;
+    double timeMediumReadAVG;
+    double timeMediumWriteAVG;
+    double timeLargeReadAVG;
+    double timeLargeWriteAVG;
+} totalTime;
+
 struct keepTime keep[NUM_OF_THREADS];
+struct totalTime total;
 
 void *pthEmpty(void *thread_data);
 int intLen[NUM_OF_THREADS];
@@ -40,9 +53,9 @@ double getWallTime()
 {
     struct timeval t;
     gettimeofday(&t, NULL);
-    printf("%e\n", (t.tv_usec / 1000000.0));
+    
     double currently = t.tv_sec + t.tv_usec / 1000000.0;
-    printf("then dubble %e\n", currently);
+    
     return currently;
 }
 
@@ -51,9 +64,9 @@ int main(int argc, char *argv[])
     long threadIdent;
     pthread_t *threads;
     double start, stop;
-    int large = 10000000; // 10 million
-    int medium = 100000;  // 100K
-    int small = 1000;     // K
+    int large = 100000000; // 100MB
+    int medium = 100000;  // 100KB
+    int small = 100;     // 0.1KB
     int ret = 0;
 
     threads = calloc(NUM_OF_THREADS, sizeof(threads));
@@ -99,6 +112,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    total.timeStart = getWallTime();
+
     //INIT THREADS
     for (threadIdent = 0; threadIdent < NUM_OF_THREADS; threadIdent++)
     {
@@ -122,6 +137,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    total.timeStop = getWallTime();
+
     //PRINT RESULTS
     for (int i = 0; i < NUM_OF_THREADS; i++)
     {
@@ -132,7 +149,18 @@ int main(int argc, char *argv[])
                keep[i].timeRun - keep[i].timeStart,
                keep[i].timeFinish - keep[i].timeRun,
                keep[i].timeFinish - keep[i].timeStart);
+
     }
+    printf("TOTAL %e \n WRITE LARGE %e \n READ LARGE %e \n \
+            WRITE MED %e \n READ MED %e \n WRITE SMALL %e\n READ SMALL %e\n",
+               total.timeStart - total.timeStop,
+               total.timeLargeWriteAVG/NUM_OF_THREADS/6,
+               total.timeLargeReadAVG/NUM_OF_THREADS/6,
+               total.timeMediumWriteAVG/NUM_OF_THREADS/6,
+               total.timeMediumReadAVG/NUM_OF_THREADS/6,
+               total.timeSmallWriteAVG/NUM_OF_THREADS/6,
+               total.timeSmallReadAVG/NUM_OF_THREADS/6
+               );
 
     free(threads);
 
@@ -173,12 +201,45 @@ void *pthEmpty(void *self)
         fputs(benchData[myself], fp);
     }
 
-    if(myself == 4){
-        sleep(1);
-    }
-
     fclose(fp);
     close(fd);
 
     keep[myself].timeFinish = getWallTime();
+
+    if(myself < NUM_OF_THREADS / 3)
+    {
+        if (myself % 2 == 0) // EVEN READ
+        {
+            total.timeLargeReadAVG = total.timeLargeReadAVG + (keep[myself].timeFinish - keep[myself].timeRun);
+        }
+        else // ODD WRITE
+        {
+            total.timeLargeWriteAVG = total.timeLargeWriteAVG + (keep[myself].timeFinish - keep[myself].timeRun);
+        }
+       
+    }
+    else if (myself >= NUM_OF_THREADS / 3 && myself < (2 * NUM_OF_THREADS / 3))
+    {
+        if (myself % 2 == 0) // EVEN READ
+        {
+            total.timeMediumReadAVG = total.timeMediumReadAVG + (keep[myself].timeFinish - keep[myself].timeRun);
+        }
+        else // ODD WRITE
+        {
+            total.timeMediumWriteAVG = total.timeMediumWriteAVG + (keep[myself].timeFinish - keep[myself].timeRun);
+        }
+    }
+    else
+    {
+        if (myself % 2 == 0) // EVEN READ
+        {
+            total.timeSmallReadAVG = total.timeSmallReadAVG + (keep[myself].timeFinish - keep[myself].timeRun);
+        }
+        else // ODD WRITE
+        {
+            total.timeSmallWriteAVG = total.timeSmallWriteAVG + (keep[myself].timeFinish - keep[myself].timeRun);
+        }
+    }
+
+
 }
