@@ -145,9 +145,28 @@ int main(int argc, char *argv[])
             intLen[i] = small;
         }
 
-        if (i % 2 == 0) // EVEN READ
+        benchData[i] = malloc(sizeof(char) * intLen[i]);
+        for (int j = 0; j < intLen[i]; j++)
+        {
+            benchData[i][j] = 'd';
+        }
+
+
+        if (i % 2 == 0) // EVEN READ // FILL SO HAVE SOMETHING TO READ
         {
             op = &readWrite[0];
+
+            FILE *fp;
+            char value[2];
+            sprintf(value, "%d", i);
+            char* fileName = malloc(12 + strlen(value)+1);
+            strcpy(fileName, "garbage");
+            strcat(fileName, value);
+            fp = fopen(fileName, op);
+
+            fputs(benchData[i], fp);
+            
+            fclose(fp);
         }
         else // ODD WRITE
         {
@@ -157,11 +176,7 @@ int main(int argc, char *argv[])
         operations[i] = malloc(sizeof(char));
         operations[i] = op;
 
-        benchData[i] = malloc(sizeof(char) * intLen[i]);
-        for (int j = 0; j < intLen[i]; j++)
-        {
-            benchData[i][j] = 'd';
-        }
+
     }
 
     total.timeSmallRead = calloc(NUM_OF_THREADS/6 , sizeof(double));
