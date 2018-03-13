@@ -82,6 +82,35 @@ double getWallTime()
     return currently;
 }
 
+double median(int n, double x[]) 
+{
+    double temp;
+    int i, j;
+    
+    for(i=0; i<n-1; i++) // the following two loops sort the array x in ascending order
+    {
+        for(j=i+1; j<n; j++) 
+        {
+            if(x[j] < x[i]) 
+            {
+                // swap elements
+                temp = x[i];
+                x[i] = x[j];
+                x[j] = temp;
+            }
+        }
+    }
+
+    if( n%2 == 0 ) 
+    {
+        return((x[n/2] + x[n/2 - 1]) / 2.0);   // if there is an even number of elements, return mean of the two elements in the middle
+    } else 
+    {
+        return x[n/2]; // else return the element in the middle
+    }
+}
+
+
 int main(int argc, char *argv[])
 {
     long threadIdent;
@@ -193,6 +222,22 @@ int main(int argc, char *argv[])
         total.timeLargeWriteVariance = total.timeLargeWriteVariance + pow((total.timeLargeWrite[i] - total.timeLargeWriteAVG/(NUM_OF_THREADS/6)), 2);
     }
 
+    total.timeSmallReadMedian = median(NUM_OF_THREADS/6, total.timeSmallRead);
+    total.timeSmallWriteMedian = median(NUM_OF_THREADS/6, total.timeSmallWrite);
+    total.timeMediumReadMedian = median(NUM_OF_THREADS/6, total.timeMediumRead);
+    total.timeMediumWriteMedian = median(NUM_OF_THREADS/6, total.timeMediumWrite);
+    total.timeLargeReadMedian = median(NUM_OF_THREADS/6, total.timeLargeRead);
+    total.timeLargeWriteMedian = median(NUM_OF_THREADS/6, total.timeLargeWrite);
+
+
+    printf("WRITE LARGE MEDIAN %e \n READ LARGE MEDIAN %e \n WRITE MED MEDIAN %e \n READ MED MEDIAN %e \n WRITE SMALL MEDIAN %e\n READ SMALL MEDIAN %e\n",
+               total.timeLargeWriteMedian,
+               total.timeLargeReadMedian,
+               total.timeMediumWriteMedian,
+               total.timeMediumReadMedian,
+               total.timeSmallWriteMedian,
+               total.timeSmallReadMedian
+               );
 
     printf("TOTAL %e \n WRITE LARGE %e \n READ LARGE %e \n WRITE MED %e \n READ MED %e \n WRITE SMALL %e\n READ SMALL %e\n",
                total.timeStop - total.timeStart,
@@ -202,7 +247,9 @@ int main(int argc, char *argv[])
                total.timeMediumReadAVG/(NUM_OF_THREADS/6),
                total.timeSmallWriteAVG/(NUM_OF_THREADS/6),
                total.timeSmallReadAVG/(NUM_OF_THREADS/6)
-               );
+    );
+    
+
     printf("\n WRITE LARGE VARIANCE %e \n READ LARGE VARIANCE %e \n WRITE MED VARIANCE %e \n READ MED VARIANCE %e \n WRITE SMALL VARIANCE %e\n READ SMALL VARIANCE %e\n",
                
                sqrt(total.timeLargeWriteVariance),
