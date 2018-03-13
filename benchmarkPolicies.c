@@ -238,7 +238,7 @@ void *pthEmpty(void *self)
     strcpy(fileName, "garbage");
     strcat(fileName, value);
 
-    //int fd = open(fileName, O_DIRECT | O_CREAT | O_RDWR | O_LARGEFILE);    
+    
     fp = fopen(fileName, op);
 
     keep[myself].timeRun = getWallTime();
@@ -253,7 +253,7 @@ void *pthEmpty(void *self)
     }
 
     fclose(fp);
-   // close(fd);
+   
 
     keep[myself].timeFinish = getWallTime();
 
@@ -278,4 +278,23 @@ void *pthEmpty(void *self)
             total.timeMediumReadAVG = total.timeMediumReadAVG + (keep[myself].timeFinish - keep[myself].timeRun);
             total.timeMediumRead[myself- NUM_OF_THREADS/3 - ((myself-(NUM_OF_THREADS/3))/2)] = (keep[myself].timeFinish - keep[myself].timeRun);
         }
-    
+        else // ODD WRITE
+        {
+            total.timeMediumWriteAVG = total.timeMediumWriteAVG + (keep[myself].timeFinish - keep[myself].timeRun);
+            total.timeMediumWrite[myself- NUM_OF_THREADS/3 - ((myself-(NUM_OF_THREADS/3)-1)/2)-1] = (keep[myself].timeFinish - keep[myself].timeRun);
+        }
+    }
+    else
+    {
+        if (myself % 2 == 0) // EVEN READ
+        {
+            total.timeSmallReadAVG = total.timeSmallReadAVG + (keep[myself].timeFinish - keep[myself].timeRun);
+            total.timeSmallRead[myself - 2*NUM_OF_THREADS/3 - ((myself-(2*NUM_OF_THREADS/3))/2)] = (keep[myself].timeFinish - keep[myself].timeRun);
+        }
+        else // ODD WRITE
+        {
+            total.timeSmallWriteAVG = total.timeSmallWriteAVG + (keep[myself].timeFinish - keep[myself].timeRun);
+            total.timeSmallWrite[myself- 2*NUM_OF_THREADS/3 - ((myself-(2*NUM_OF_THREADS/3)-1)/2)-1] = (keep[myself].timeFinish - keep[myself].timeRun);
+        }
+    }
+}
