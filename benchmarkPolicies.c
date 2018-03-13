@@ -18,7 +18,7 @@
 #include <fcntl.h>
 #include <math.h>
 
-#define NUM_OF_THREADS 18
+#define NUM_OF_THREADS 24
 
 typedef struct keepTime
 {
@@ -183,12 +183,14 @@ int main(int argc, char *argv[])
     }
 
     for(int i = 0; i < NUM_OF_THREADS/6; i++){
-        total.timeSmallReadVariance = total.timeSmallReadVariance + pow((total.timeSmallRead[i] - total.timeSmallReadAVG/(NUM_OF_THREADS/3)), 2);
-        total.timeSmallWriteVariance = total.timeSmallWriteVariance + pow((total.timeSmallWrite[i] - total.timeSmallWriteAVG/(NUM_OF_THREADS/3)), 2);
-        total.timeMediumReadVariance = total.timeMediumReadVariance + pow((total.timeMediumRead[i] - total.timeMediumReadAVG/(NUM_OF_THREADS/3)), 2);
-        total.timeMediumWriteVariance = total.timeMediumWriteVariance + pow((total.timeMediumWrite[i] - total.timeMediumWriteAVG/(NUM_OF_THREADS/3)), 2);
-        total.timeLargeReadVariance = total.timeLargeReadVariance + pow((total.timeLargeRead[i] - total.timeLargeWriteAVG/(NUM_OF_THREADS/3)), 2);
-        total.timeLargeWriteVariance = total.timeLargeWriteVariance + pow((total.timeLargeWrite[i] - total.timeLargeReadAVG/(NUM_OF_THREADS/3)), 2);
+        total.timeSmallReadVariance = total.timeSmallReadVariance + pow((total.timeSmallRead[i] - total.timeSmallReadAVG/(NUM_OF_THREADS/6)), 2);
+        total.timeSmallWriteVariance = total.timeSmallWriteVariance + pow((total.timeSmallWrite[i] - total.timeSmallWriteAVG/(NUM_OF_THREADS/6)), 2);
+
+        total.timeMediumReadVariance = total.timeMediumReadVariance + pow((total.timeMediumRead[i] - total.timeMediumReadAVG/(NUM_OF_THREADS/6)), 2);
+        total.timeMediumWriteVariance = total.timeMediumWriteVariance + pow((total.timeMediumWrite[i] - total.timeMediumWriteAVG/(NUM_OF_THREADS/6)), 2);
+
+        total.timeLargeReadVariance = total.timeLargeReadVariance + pow((total.timeLargeRead[i] - total.timeLargeReadAVG/(NUM_OF_THREADS/6)), 2);
+        total.timeLargeWriteVariance = total.timeLargeWriteVariance + pow((total.timeLargeWrite[i] - total.timeLargeWriteAVG/(NUM_OF_THREADS/6)), 2);
     }
 
 
@@ -203,12 +205,12 @@ int main(int argc, char *argv[])
                );
     printf("\n WRITE LARGE VARIANCE %e \n READ LARGE VARIANCE %e \n WRITE MED VARIANCE %e \n READ MED VARIANCE %e \n WRITE SMALL VARIANCE %e\n READ SMALL VARIANCE %e\n",
                
-               total.timeLargeWriteVariance,
-               total.timeLargeReadVariance,
-               total.timeMediumWriteVariance,
-               total.timeMediumReadVariance,
-               total.timeLargeWriteVariance,
-               total.timeLargeReadVariance
+               sqrt(total.timeLargeWriteVariance),
+               sqrt(total.timeLargeReadVariance),
+               sqrt(total.timeMediumWriteVariance),
+               sqrt(total.timeMediumReadVariance),
+               sqrt(total.timeSmallWriteVariance),
+               sqrt(total.timeSmallReadVariance)
                );
 
     free(threads);
@@ -265,7 +267,7 @@ void *pthEmpty(void *self)
         else // ODD WRITE
         {
             total.timeLargeWriteAVG = total.timeLargeWriteAVG + (keep[myself].timeFinish - keep[myself].timeRun);
-            total.timeLargeWrite[myself - ((myself-1)/2)-1] =  (keep[myself].timeFinish - keep[myself].timeRun);
+            total.timeLargeWrite[myself - ((myself)/2)-1] =  (keep[myself].timeFinish - keep[myself].timeRun);
         }
        
     }
@@ -273,30 +275,7 @@ void *pthEmpty(void *self)
     {
         if (myself % 2 == 0) // EVEN READ
         {
-            printf("index read %d\n", myself- NUM_OF_THREADS/3 - ((myself-(NUM_OF_THREADS/3))/2));
             total.timeMediumReadAVG = total.timeMediumReadAVG + (keep[myself].timeFinish - keep[myself].timeRun);
             total.timeMediumRead[myself- NUM_OF_THREADS/3 - ((myself-(NUM_OF_THREADS/3))/2)] = (keep[myself].timeFinish - keep[myself].timeRun);
         }
-        else // ODD WRITE
-        {
-            printf("index med write %d\n", myself- NUM_OF_THREADS/3 - ((myself-(NUM_OF_THREADS/3)-1)/2)-1);
-            total.timeMediumWriteAVG = total.timeMediumWriteAVG + (keep[myself].timeFinish - keep[myself].timeRun);
-            total.timeMediumWrite[myself- NUM_OF_THREADS/3 - ((myself-(NUM_OF_THREADS/3)-1)/2)-1] = (keep[myself].timeFinish - keep[myself].timeRun);
-        }
-    }
-    else
-    {
-        if (myself % 2 == 0) // EVEN READ
-        {
-            total.timeSmallReadAVG = total.timeSmallReadAVG + (keep[myself].timeFinish - keep[myself].timeRun);
-            total.timeSmallRead[myself - 2*NUM_OF_THREADS/3 - ((myself-(2*NUM_OF_THREADS/3))/2)] = (keep[myself].timeFinish - keep[myself].timeRun);
-        }
-        else // ODD WRITE
-        {
-            total.timeSmallWriteAVG = total.timeSmallWriteAVG + (keep[myself].timeFinish - keep[myself].timeRun);
-            total.timeSmallWrite[myself- 2*NUM_OF_THREADS/3 - ((myself-(2*NUM_OF_THREADS/3)-1)/2)-1] = (keep[myself].timeFinish - keep[myself].timeRun);
-        }
-    }
-
-
-}
+    
