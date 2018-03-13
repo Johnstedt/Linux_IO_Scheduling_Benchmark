@@ -310,17 +310,20 @@ void *pthEmpty(void *self)
     strcpy(fileName, "garbage");
     strcat(fileName, value);
 
-    
-    fp = fopen(fileName, op);
-
-    keep[myself].timeRun = getWallTime();
 
     if (*operations[myself] == 'r')
     {
+
+        fp = fopen(fileName, "r");
+
+        keep[myself].timeRun = getWallTime();
         fgets(benchData[myself], intLen[myself], fp);
     }
     else 
-    {
+    {   
+        fp = fopen(fileName, "w");
+
+        keep[myself].timeRun = getWallTime();   
         fputs(benchData[myself], fp);
     }
 
