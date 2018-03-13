@@ -145,28 +145,9 @@ int main(int argc, char *argv[])
             intLen[i] = small;
         }
 
-        benchData[i] = malloc(sizeof(char) * intLen[i]);
-        for (int j = 0; j < intLen[i]; j++)
-        {
-            benchData[i][j] = 'd';
-        }
-
-
-        if (i % 2 == 0) // EVEN READ // FILL SO HAVE SOMETHING TO READ
+        if (i % 2 == 0) // EVEN READ
         {
             op = &readWrite[0];
-
-            FILE *fp;
-            char value[2];
-            sprintf(value, "%d", i);
-            char* fileName = malloc(12 + strlen(value)+1);
-            strcpy(fileName, "garbage");
-            strcat(fileName, value);
-            fp = fopen(fileName, op);
-
-            fputs(benchData[i], fp);
-            
-            fclose(fp);
         }
         else // ODD WRITE
         {
@@ -176,7 +157,36 @@ int main(int argc, char *argv[])
         operations[i] = malloc(sizeof(char));
         operations[i] = op;
 
+        benchData[i] = malloc(sizeof(char) * intLen[i]);
+        for (int j = 0; j < intLen[i]; j++)
+        {
+            benchData[i][j] = 'd';
+        }
 
+        FILE *fp;
+
+        char value[2];
+
+        sprintf(value, "%d", i);
+
+        char* fileName = malloc(12 + strlen(value)+1);
+
+        strcpy(fileName, "garbage");
+        strcat(fileName, value);
+
+        printf("%s", fileName);
+
+        fp = fopen(fileName, "w");
+
+        if (*operations[i] == 'r')
+        {
+            printf("???\n" );
+            fputs(benchData[i], fp);
+        }else {
+            printf("!!!\n");
+        }
+
+        fclose(fp);
     }
 
     total.timeSmallRead = calloc(NUM_OF_THREADS/6 , sizeof(double));
